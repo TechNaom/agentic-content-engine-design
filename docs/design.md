@@ -125,7 +125,7 @@ Plus CPU and memory on the GPU container (Modal bills these per second as well),
 
 **Budget guard (same pattern as LBE):** a hard monthly cap on GPU spend, checked before each run starts; the GPU app scales to zero and has a maximum runtime per run; the cost of every run is recorded in the ledger.
 
-**Recommended start:** gpt-oss-20b on L4 for the first slice (cheapest, proves the plumbing), then gpt-oss-120b on A100 80 GB for the real comparison with LBE.
+**Budget (decided 2026-10-13): $10/month hard cap, under ₹1,000.** gpt-oss-20b on L4 is the default (~$4/month for a daily run); gpt-oss-120b runs only during the comparison week (~$3 for 7 runs). Total ~$7 before Modal's $30 monthly credit. An always-on GPU (about $1,300/month for an A100) is ruled out.
 
 ## 6. Failure handling
 
@@ -174,7 +174,7 @@ Phase 1 replaces the cost estimates with measured GPU seconds, so the budget is 
 | Decision | Options | Recommended | Status |
 |---|---|---|---|
 | Owner, repo, model hosting | — | TechNaom, `agentic-content-engine`, self-hosted open-weight models on cloud GPU | Decided 2026-10-13 |
-| Monthly GPU budget cap | $20 or $30 | $30: equal to Modal's monthly credit, so the cap only bites if the credit runs out | Open |
+| Monthly GPU budget cap | — | **$10/month hard cap** (under ₹1,000), the owner's R&D budget: gpt-oss-20b on L4 daily (~$4) plus one comparison week on gpt-oss-120b (~$3); Modal's $30 monthly credit may cover all of it | Decided 2026-10-13 |
 | Critic model family | Same as the writer, or a different open-weight family | Different family: judges tend to favour their own family's text, which is why LBE's judge is a different family | Open |
 | GPU provider | Modal or RunPod | Modal: per-second billing, scale to zero, $30 monthly credit | Open |
 | Search provider for scouts | Tavily on a separate key, or another provider | Tavily on a separate key: proven in LBE; a separate quota protects the daily post | Open |
