@@ -179,6 +179,23 @@ Phase 1 replaces the cost estimates with measured GPU seconds, so the budget is 
 | GPU provider | Modal or RunPod | Modal: per-second billing, scale to zero, $30 monthly credit | Open |
 | Search provider for scouts | Tavily on a separate key, or another provider | Tavily on a separate key: proven in LBE; a separate quota protects the daily post | Open |
 
+## 11. Multi-cloud R&D track
+
+The same agents run on several clouds, one at a time, to learn each platform hands-on and measure them side by side. The agents call the model through an OpenAI-compatible URL, so the code is packaged once in Docker and only the deployment changes.
+
+| Sprint | Cloud | Agents run on | Model runs on | Credit for new accounts |
+|---|---|---|---|---|
+| Baseline | Modal | GitHub Actions | Modal serverless GPU (L4) | $30 per month |
+| 1 | Google Cloud | Cloud Run Job, triggered by Cloud Scheduler | Cloud Run GPU, NVIDIA L4 24 GB, about $0.67 per GPU-hour plus CPU and memory | $300 for 90 days; GPUs need an upgraded (paid) billing account |
+| 2 | Microsoft Azure | Container Apps Job | Container Apps serverless GPU, T4 (Central India, South India) or A100 | $200 for 30 days |
+| 3 | AWS | Bedrock AgentCore | An EC2 GPU machine (g6.xlarge, L4) that shuts itself down after each run; no serverless GPU containers found | $100, plus $100 earned; 6-month free plan |
+
+**Guardrails on every cloud:** infrastructure as code (Terraform) to create and destroy each setup with one command; the $10/month cap in code; budget alerts in each cloud (on Google Cloud these alert but do not stop spending by default, so the code cap and auto-shutdown are the real protection); one cloud at a time.
+
+**Output:** the same agent measured on each platform (cost per run, cold start, setup effort), published as a comparison.
+
+Sources: [Cloud Run GPU](https://docs.cloud.google.com/run/docs/configuring/services/gpu), [Cloud Run jobs GPU](https://docs.cloud.google.com/run/docs/configuring/jobs/gpu), [Google Cloud free trial](https://docs.cloud.google.com/free/docs/free-cloud-features), [Azure serverless GPU](https://learn.microsoft.com/en-us/azure/container-apps/gpu-serverless-overview), [Azure free account](https://azure.microsoft.com/en-us/pricing/purchase-options/azure-account), [AWS free tier](https://aws.amazon.com/free/), [Bedrock AgentCore](https://aws.amazon.com/bedrock/agentcore/), [g6.xlarge pricing (DoIT, third party)](https://www.doit.com/compute/spot/us-east-1/g6.xlarge), all opened 2026-10-13.
+
 ## References
 
 - [Modal pricing](https://modal.com/pricing), opened 2026-10-13

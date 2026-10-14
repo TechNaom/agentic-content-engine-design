@@ -34,6 +34,7 @@ flowchart LR
 | **Models** | `gpt-oss-20b` (about 16 GB VRAM) to prove the plumbing, then `gpt-oss-120b` on an A100 80 GB, served by vLLM |
 | **GPU hosting** | Serverless, per-second billing, scale to zero: an estimated $4–$12.50 a month for one run a day (to be measured in phase 1) |
 | **Memory** | pgvector story memory with CPU embeddings, so old news is dropped at the source |
+| **Multi-cloud track** | The same agents deployed on Google Cloud (Cloud Run + L4 GPU), Azure (Container Apps + serverless GPU) and AWS (Bedrock AgentCore), with Terraform, measured side by side |
 | **Success test** | One week side by side with the production workflow: repeats caught, launches missed, unsupported claims, latency and cost per run |
 
 ## Read more
