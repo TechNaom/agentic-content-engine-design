@@ -67,16 +67,46 @@ LangGraph provides the `StateGraph`, conditional routing, a Postgres checkpointe
 (`thread_id` = run date, so a crashed run resumes) and per-node `RetryPolicy`.
 LangChain provides the tool wrappers, structured output and the model interface.
 
-## 3. Tools
+## 3. Two orchestrators
 
-| Tool | What it returns | Limits |
+The same nodes and tools run under two orchestrators, chosen by one setting (`ORCHESTRATOR=code|prompt`),
+so they can be compared on the same days.
+
+| Orchestrator | How it works | Role |
 |---|---|---|
-| `github_activity` | Owner's recent public commits, PRs, issues, new repos (GitHub API) | Last 30 days; public data only |
-| `search_knowledge` | Top-k chunks from the owner's indexed material (section 4) | k ≤ 8 per call |
-| `owner_facts` | Owner-approved facts file: roles, milestones, courses, numbers the owner is happy to share | Read-only; edited only by the owner |
-| `web_search` (Tavily) | A quote or reference, always with its URL | **Hard cap: 5 searches per run** |
+| **Code-based** (default) | LangGraph `StateGraph`; routing in code (conditional edges) | Production: predictable, cheap, testable |
+| **Prompt-based** | A supervisor model sees the nodes as tools and decides the next step itself | R&D: flexibility, measured against the code graph |
 
-## 4. Knowledge and memory (vector database)
+In both, the hard rules stay in code: the critic must pass before publishing, at most one rewrite,
+budget and search caps. Inside both, the **story miner is a ReAct agent** (it picks its own tools in a
+loop, max 2 rounds) and **critic → writer is a reflection loop**. So the project covers the four common
+patterns: fixed workflow, supervisor, ReAct and reflection.
+
+**Comparison** (same 6 shadow days): drafts the owner would post, grounding failures caught, cost,
+latency, run success rate.
+
+## 4. Tools and MCP
+
+| Tool | Source | What it returns | Limits |
+|---|---|---|---|
+| GitHub activity | **GitHub's official MCP server** (consumed) | Owner's recent commits, PRs, issues, repos | Read-only token; last 30 days |
+| `search_knowledge` | **Our knowledge MCP server** (provided) | Top-k chunks of the owner's material (section 5) | k ≤ 8 per call |
+| `get_evidence` | Our knowledge MCP server | Owner-attested facts from the evidence register (`evidence/register.json`, LBE's format) | Read-only; only the owner adds entries |
+| `recent_posts` | Our knowledge MCP server | Past motivation posts with theme and date | Last 21 days |
+| `web_search` (Tavily) | LangChain tool | A quote or reference, always with its URL | **Hard cap: 5 searches per run** |
+
+**MCP in both directions:**
+
+- **Consume:** GitHub's MCP server gives the miner its GitHub tools, loaded into LangGraph with
+  `langchain-mcp-adapters`.
+- **Provide:** our own knowledge MCP server (Python MCP SDK, FastMCP). The agent reaches its knowledge
+  through it, and the owner can add the same server to Claude Code or Claude Desktop to query the
+  owner's own work.
+- **Transport:** stdio. In the GitHub Action each server runs as a subprocess of the run: no hosting,
+  no cost. Streamable HTTP only if a hosted endpoint is ever needed.
+- Tool output is untrusted: it passes through LBE's `untrusted.py` escaping before entering a prompt.
+
+## 5. Knowledge and memory (vector database)
 
 | Collection | Contents | Used by |
 |---|---|---|
@@ -90,17 +120,18 @@ LangChain provides the tool wrappers, structured output and the model interface.
 - **Embeddings:** fastembed `BAAI/bge-small-en-v1.5` (384 dimensions) on CPU in the Action: free, no GPU.
 - **Refresh:** a weekly Action re-indexes changed files (content hash per chunk); deleted files drop their chunks.
 
-## 5. Grounding and the critic
+## 6. Grounding and the critic
 
 The main risk is an invented personal story ("I failed ten times before..."). Rules:
 
-1. **Every first-person claim must cite `evidence[]`** (a tool result or the facts file). The critic
-   fails the draft on any claim without one, the same principle as LBE's evidence register.
+1. **Every first-person claim must cite evidence:** a tool result in `evidence[]`, or an owner-attested
+   entry in the evidence register cited as `[ev:<id>]`. The critic reuses LBE's integrity checks
+   (D7-D9 in `gate/integrity.py`) and fails the draft on any claim without one.
 2. **Clichés:** a banned-phrase list plus a model check ("could anyone have written this?").
 3. **No engagement bait** ("comment YES", "repost if"), as in LBE's voice guide.
 4. **Length** within LinkedIn's limit, with the GitHub and follow lines in the sign-off.
 
-## 6. Models
+## 7. Models
 
 | Role | Model | Where |
 |---|---|---|
@@ -109,7 +140,7 @@ The main risk is an invented personal story ("I failed ten times before..."). Ru
 
 All calls go to one OpenAI-compatible URL per role, so a provider change is a setting.
 
-## 7. Review, publishing and schedule
+## 8. Review, publishing and schedule
 
 - **Trigger:** an exact-time cron (the same Cloudflare Worker pattern LBE uses; GitHub's own cron ran
   hours late) dispatches the workflow at 04:30 UTC on Mon, Wed, Fri.
@@ -117,7 +148,7 @@ All calls go to one OpenAI-compatible URL per role, so a provider change is a se
   owner; nothing is sent to LinkedIn.
 - **Live phase:** the LinkedIn Posts API with its own idempotency key and kill switch.
 
-## 8. Accounts, secrets and cost
+## 9. Accounts, secrets and cost
 
 Service accounts (Modal, Neon, Qdrant, Langfuse, Tavily) are the agent's own; the code reads every
 endpoint and key from GitHub Secrets and does not depend on which account they belong to.
@@ -131,7 +162,7 @@ endpoint and key from GitHub Secrets and does not depend on which account they b
 Hard caps in code: monthly GPU spend ($10, shared with the rest of the agent R&D), searches per run,
 max run time. The run refuses to start when a cap is reached.
 
-## 9. Reuse from LBE
+## 10. Reuse from LBE
 
 LBE's plumbing is proven in production, so it is **copied** into the new repo (each file notes its
 source: LBE at tag `stable-2026-10-15`). It is not imported as a library: a change made for the agent
@@ -152,23 +183,51 @@ must never be able to break the live 4 PM post.
 **New:** the LangGraph graph and nodes, LangChain tools, the vector store and indexer, the shadow
 review issue, the Modal model deployment. **Not needed:** `news/` and the judge-specific parts of `gate/`.
 
-## 10. Phases and gates
+## 11. Interview coverage
 
-| Phase | Done when |
+The project is built to cover the topics asked in agent and GenAI interviews. The code repo keeps
+`docs/interview-guide.md`: for each topic, the decision, the trade-off and the **measured** result.
+
+| Topic | Where it lives |
 |---|---|
-| 1. Skeleton | Private repo, CI, graph runs end to end with a scripted model in tests |
-| 2. Real models and knowledge | Modal endpoint up; pgvector indexed; one real shadow draft; GPU cost measured |
-| 3. Shadow fortnight | 6 drafts reviewed by the owner; success criteria met |
-| 4. Live | Owner's go-ahead; Mon / Wed / Fri at 10 AM IST |
+| Workflows vs agents, orchestration patterns | Code graph vs supervisor, ReAct miner, reflection loop |
+| State, checkpointing, resume, replay | Typed state, Postgres checkpointer, `thread_id` = run date |
+| Tools and function calling | Typed tool schemas; tool errors returned to the model |
+| MCP: client, server, transports | Section 4 |
+| RAG | Chunking, embeddings, hybrid search, metadata filters, re-index by content hash |
+| Vector DB choice | pgvector vs Qdrant on the same labelled queries (recall@k, latency) |
+| Short- vs long-term memory | Graph state vs knowledge and post collections |
+| Guardrails, hallucination control | Evidence register, integrity checks, untrusted-text escaping, structured output |
+| Human in the loop | Shadow review issue; LangGraph `interrupt` before publishing in the live phase |
+| Evals | Retrieval recall@k, critic seeded faults, orchestrator A/B, LLM-as-judge from another family |
+| Observability | OpenTelemetry to Langfuse: per-node latency, tokens, GPU seconds, cost |
+| Cost and reliability | Hard caps, retries and timeouts, idempotency, kill switch, fallbacks |
+| Self-hosting and deployment | gpt-oss-20b on vLLM (Modal L4), GitHub Actions, Docker |
+| Security | Secrets in GitHub Secrets, least-privilege tokens, prompt-injection handling |
 
-## 11. Decisions
+## 12. Phases and gates
+
+Each phase ends with a review by the owner before the next starts.
+
+| Phase | Deliverable | Needs from the owner |
+|---|---|---|
+| 1. Skeleton | Private repo, copied LBE plumbing, CI; the code graph runs end to end on a scripted model in tests | — |
+| 2. Knowledge and MCP | Indexer + pgvector; our knowledge MCP server; GitHub MCP in the miner | Neon account, read-only GitHub token |
+| 3. Real model | vLLM gpt-oss-20b on Modal (tool calling verified); first real shadow draft as a review issue; GPU cost measured | Modal, Langfuse accounts |
+| 4. Second orchestrator | Prompt-based supervisor; eval harness comparing both; Qdrant comparison | Qdrant account |
+| 5. Shadow fortnight and live | 6 drafts reviewed; `interrupt` + approve-to-publish; live Mon / Wed / Fri at 10 AM IST | Go-ahead to post |
+
+## 13. Decisions
 
 | Decision | Choice | Status |
 |---|---|---|
-| Where it lives | `agentic-content-engine` (private), first use case | Proposed |
-| Base | Copy LBE's proven plumbing (section 9); build only the agent parts | Owner, 2026-10-15 |
+| Where it lives | `agentic-content-engine` (private), first use case | Decided 2026-10-15 |
+| Base | Copy LBE's proven plumbing (section 10); build only the agent parts | Owner, 2026-10-15 |
 | Time | 10 AM IST | Decided 2026-10-15 |
 | Days | Mon / Wed / Fri, then review | Default, owner may change |
 | Style | Mix: motivation, build journey, lessons (planner rotates) | Default, owner may change |
 | Vector DB | pgvector main, Qdrant comparison | Decided 2026-10-15 |
+| Orchestration | Both: code-based graph (default) and prompt-based supervisor, compared | Decided 2026-10-15 |
+| MCP | Consume GitHub's server; provide our own knowledge server; stdio | Decided 2026-10-15 |
+| Owner facts | LBE's evidence register format (`[ev:<id>]` citations) | Decided 2026-10-15 |
 | Critic family | Different open-weight family | Open |
