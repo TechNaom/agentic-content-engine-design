@@ -2,6 +2,7 @@
 
 **Status:** draft for the owner's review, 2026-10-13. Nothing is built until the owner approves this document.
 **Owner:** TechNaom. **Reference system:** `linkedin-branding-engine` (LBE), which stays untouched.
+**First use case:** the [motivation agent](motivation-agent.md) (2026-10-15).
 
 ## 1. Goal
 

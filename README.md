@@ -40,6 +40,7 @@ flowchart LR
 ## Read more
 
 - [Full design](docs/design.md): goals, agents, state, GPU options with sourced prices, cost model, failure handling, evaluation, phases and decisions.
+- [Motivation agent](docs/motivation-agent.md): the first use case. LangGraph agents write grounded motivation and build-journey posts at 10 AM IST, with pgvector memory.
 - [Field guide to the production workflow](https://github.com/TechNaom/autonomous-ai-workflow-field-guide): the system this one is compared against.
 
 ---
