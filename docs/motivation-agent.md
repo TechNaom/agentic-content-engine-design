@@ -131,7 +131,28 @@ endpoint and key from GitHub Secrets and does not depend on which account they b
 Hard caps in code: monthly GPU spend ($10, shared with the rest of the agent R&D), searches per run,
 max run time. The run refuses to start when a cap is reached.
 
-## 9. Phases and gates
+## 9. Reuse from LBE
+
+LBE's plumbing is proven in production, so it is **copied** into the new repo (each file notes its
+source: LBE at tag `stable-2026-10-15`). It is not imported as a library: a change made for the agent
+must never be able to break the live 4 PM post.
+
+| Reused | LBE source |
+|---|---|
+| Settings and preflight | `settings.py`, `setup_env.py`, `preflight.py` |
+| Tracing to Langfuse | `tracing_otel.py`, `tracing_langfuse.py`, `spans.py`, `observe.py` |
+| Budget caps and cost ledger | `usage/`, `writer/pricing.py` |
+| Publishing (idempotency, kill switch, shadow digest) | `publisher/`, `linkedin_auth.py` |
+| Evidence register and integrity checks (critic core) | `evidence/register.py`, `gate/integrity.py`, `untrusted.py` |
+| The owner's voice guide | `writer/voice_guide.py` |
+| Alerts, watchdog, run history | `alerts/`, `watchdog.py`, `run_history.py`, `health.py` |
+| Exact-time trigger | `ops/trigger/cloudflare/` (cron 04:30 UTC Mon/Wed/Fri) |
+| CI, shadow test, watchdog workflows | `.github/workflows/` |
+
+**New:** the LangGraph graph and nodes, LangChain tools, the vector store and indexer, the shadow
+review issue, the Modal model deployment. **Not needed:** `news/` and the judge-specific parts of `gate/`.
+
+## 10. Phases and gates
 
 | Phase | Done when |
 |---|---|
@@ -140,11 +161,12 @@ max run time. The run refuses to start when a cap is reached.
 | 3. Shadow fortnight | 6 drafts reviewed by the owner; success criteria met |
 | 4. Live | Owner's go-ahead; Mon / Wed / Fri at 10 AM IST |
 
-## 10. Decisions
+## 11. Decisions
 
 | Decision | Choice | Status |
 |---|---|---|
 | Where it lives | `agentic-content-engine` (private), first use case | Proposed |
+| Base | Copy LBE's proven plumbing (section 9); build only the agent parts | Owner, 2026-10-15 |
 | Time | 10 AM IST | Decided 2026-10-15 |
 | Days | Mon / Wed / Fri, then review | Default, owner may change |
 | Style | Mix: motivation, build journey, lessons (planner rotates) | Default, owner may change |
