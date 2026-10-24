@@ -149,7 +149,7 @@ Groq follows LBE; self-hosting `gpt-oss-20b` on vLLM (Modal L4) is a later exper
 
 ## 9. Accounts, secrets and cost
 
-Service accounts (Modal, Neon, Qdrant, Langfuse, Tavily, Unsplash/Pexels) are the agent's own; the code
+Service accounts (Groq, Neon, Qdrant, Langfuse, Tavily, Unsplash/Pexels; Modal later) are the agent's own; the code
 reads every endpoint and key from GitHub Secrets and does not depend on which account they belong to.
 
 | Item | Estimate (to be replaced by measurements) |
