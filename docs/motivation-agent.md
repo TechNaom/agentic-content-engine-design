@@ -28,6 +28,25 @@ a short reflection with one practical takeaway, and a poster image.
 - The owner would post at least 4 of 6 drafts with no more than light edits.
 - Every run completes within 15 minutes; cost per run recorded.
 
+## 1b. Two styles, one engine (owner, 2026-10-25)
+
+The first live post (2026-10-24) showed the agents' instructions tied every reflection to AI
+engineering. The owner wants **real motivation** as well, so the same engine runs two styles,
+chosen by one setting (`ACE_STYLE`); the agents, tools, verification and safety are shared.
+
+| | `life` (new) | `builder` (existing) |
+|---|---|---|
+| When | **Daily, 8:00 AM IST** | Mon / Wed / Fri, 10:00 AM IST |
+| Themes | Willpower, leadership, life lessons, courage, discipline, gratitude, resilience, great people | Craft, learning and focus for people who build things |
+| Reflection | 2-3 warm, simple, universal lines and one small life takeaway; no tech framing | Ties the quote to building AI systems |
+| Authors | Great people, writers, philosophers, scientists, artists, athletes, and **historical, widely admired leaders** (e.g. Gandhi, Mandela, Lincoln, Kalam) | Builders, scientists, engineers, designers, writers, artists, philosophers |
+| Political rule | Living politicians blocked; deceased leaders allowed (life dates on Wikiquote); dictators always blocked | All political figures blocked |
+| Clichés | Classic motivational phrasing allowed; engagement bait still banned | Clichés banned |
+| Poster | Licensed photo, no people (same filter) | Same |
+
+Both styles: verified quotes only, hashtags required, separate review issues, one live post per
+style per day, shared memory so quotes and authors don't repeat across the two.
+
 ## 2. Graph
 
 ```mermaid
@@ -246,3 +265,6 @@ Each phase ends with a review by the owner before the next starts.
 | MCP | Consume Tavily's server; provide our own quotes server; stdio | Decided 2026-10-24 |
 | Vector DB | pgvector main, Qdrant comparison | Decided 2026-10-15 |
 | Critic model | Same as default (`grok-4.3`); switch only if lenient vs the owner's ratings | Decided 2026-10-24 |
+| Styles | `life` daily 8:00 AM IST (real motivation) + `builder` Mon/Wed/Fri 10:00 AM IST | Decided 2026-10-25 |
+| Leaders (life style) | Historical, widely admired leaders allowed; living politicians and dictators blocked | Decided 2026-10-25 |
+| Poster | Licensed photo only (no quote overlay) | Decided 2026-10-25 |
