@@ -39,8 +39,8 @@ chosen by one setting (`ACE_STYLE`); the agents, tools, verification and safety 
 | When | **Daily, 8:00 AM IST** | Mon / Wed / Fri, 10:00 AM IST |
 | Themes | Willpower, leadership, life lessons, courage, discipline, gratitude, resilience, great people | Craft, learning and focus for people who build things |
 | Reflection | 2-3 warm, simple, universal lines and one small life takeaway; no tech framing | Ties the quote to building AI systems |
-| Authors | Great people, writers, philosophers, scientists, artists, athletes, and **historical, widely admired leaders** (e.g. Gandhi, Mandela, Lincoln, Kalam) | Builders, scientists, engineers, designers, writers, artists, philosophers |
-| Political rule | Living politicians blocked; deceased leaders allowed (life dates on Wikiquote); dictators always blocked | All political figures blocked |
+| Authors | Real motivation **across all fields**: athletes and coaches, entrepreneurs, authors and poets, artists and musicians, actors, scientists and explorers, philosophers | Builders, scientists, engineers, designers, writers, artists, philosophers |
+| Political rule | All political figures blocked (owner, 2026-10-25: no political leaders) | Same |
 | Clichés | Classic motivational phrasing allowed; engagement bait still banned | Clichés banned |
 | Poster | Licensed photo, no people (same filter) | Same |
 
@@ -266,5 +266,5 @@ Each phase ends with a review by the owner before the next starts.
 | Vector DB | pgvector main, Qdrant comparison | Decided 2026-10-15 |
 | Critic model | Same as default (`grok-4.3`); switch only if lenient vs the owner's ratings | Decided 2026-10-24 |
 | Styles | `life` daily 8:00 AM IST (real motivation) + `builder` Mon/Wed/Fri 10:00 AM IST | Decided 2026-10-25 |
-| Leaders (life style) | Historical, widely admired leaders allowed; living politicians and dictators blocked | Decided 2026-10-25 |
+| Authors (life style) | Real motivation across all fields; no political figures at all | Decided 2026-10-25 |
 | Poster | Licensed photo only (no quote overlay) | Decided 2026-10-25 |
