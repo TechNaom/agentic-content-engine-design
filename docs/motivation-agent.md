@@ -128,15 +128,36 @@ detail** in the reflection.
 4. Length, no markdown, emoji limit, banned clichés and engagement bait.
 5. Model judgment: is the reflection specific and useful, or generic filler?
 
-## 7. Models
+## 7. Models (model-agnostic)
 
-| Role | Model | Where |
+**Default: all agents on xAI `grok-4.3`.** No Claude models in this pipeline (owner, 2026-10-24).
+
+The model is configuration, never code: a `provider:model` string, set once for all agents and
+optionally per agent.
+
+```
+ACE_MODEL=xai:grok-4.3                         # default for every agent
+ACE_MODEL_CRITIC=groq:openai/gpt-oss-120b      # optional per-agent override
+```
+
+| Provider key | Endpoint | API key secret |
 |---|---|---|
-| Planner, scouts, verifier, writer | `openai/gpt-oss-120b` | **Groq** (as in LBE; separate key and hard cap) |
-| Critic | A different open-weight family (to avoid self-preference) | Open decision; candidate: Gemma 4 |
+| `xai` | `https://api.x.ai/v1` | `XAI_API_KEY` |
+| `groq` | `https://api.groq.com/openai/v1` | `GROQ_API_KEY` |
+| `openai` | `https://api.openai.com/v1` | `OPENAI_API_KEY` |
+| `openrouter` | `https://openrouter.ai/api/v1` | `OPENROUTER_API_KEY` |
+| `vllm` | `ACE_VLLM_BASE_URL` (self-hosted, e.g. on Modal) | `ACE_VLLM_API_KEY` |
 
-All calls go to one OpenAI-compatible URL per role, so a provider change is a setting. Starting on
-Groq follows LBE; self-hosting `gpt-oss-20b` on vLLM (Modal L4) is a later experiment on the same setting.
+All of these speak the OpenAI-compatible API, so one LangChain client (`ChatOpenAI` with a base URL)
+serves every provider; adding a provider is one registry entry. Agents only see the structured-LLM
+interface, so tests and the demo run on a scripted fake with no key and no cost.
+
+**Prices (per 1M tokens, docs.x.ai and LBE's verified table, 2026-10):** `grok-4.3` $1.25 in /
+$2.50 out (about $0.05 a run, $0.65 a month); `grok-4.7` $2 / $6; Groq `gpt-oss-120b` $0.15 / $0.60.
+
+**Self-preference safeguard:** the critic's hard checks are code; only its "generic or specific?"
+judgment uses a model. During the shadow fortnight its verdicts are compared with the owner's
+ratings; if it is lenient, only `ACE_MODEL_CRITIC` changes.
 
 ## 8. Review, publishing and schedule
 
@@ -149,12 +170,12 @@ Groq follows LBE; self-hosting `gpt-oss-20b` on vLLM (Modal L4) is a later exper
 
 ## 9. Accounts, secrets and cost
 
-Service accounts (Groq, Neon, Qdrant, Langfuse, Tavily, Unsplash/Pexels; Modal later) are the agent's own; the code
+Service accounts (xAI, Neon, Qdrant, Langfuse, Tavily, Unsplash/Pexels) are the agent's own; the code
 reads every endpoint and key from GitHub Secrets and does not depend on which account they belong to.
 
 | Item | Estimate (to be replaced by measurements) |
 |---|---|
-| Groq `gpt-oss-120b`, about 10 calls per run, 13 runs a month | Cents per month (measured in the ledger from the first run) |
+| xAI `grok-4.3`, about 10 calls per run, 13 runs a month | About $0.65/month (measured in the ledger from the first run) |
 | Neon, Qdrant, Langfuse, GitHub Actions, Wikiquote, Wikimedia, Unsplash, Pexels | Free tiers |
 | Tavily | ≤ 5 searches per run, ≤ 65 a month |
 
@@ -195,7 +216,7 @@ The code repo keeps `docs/interview-guide.md`: for each topic, the decision, the
 | Evals | Verifier precision on a labelled set of real vs misattributed quotes; orchestrator A/B; LLM-as-judge from another family |
 | Observability | OpenTelemetry to Langfuse: per-agent latency, tokens, GPU seconds, cost |
 | Cost and reliability | Hard caps, retries and timeouts, idempotency, kill switch |
-| Model hosting and deployment | Groq API first, then self-hosted vLLM (Modal) on the same setting; GitHub Actions, Docker |
+| Model-agnostic design | `provider:model` config per agent; xAI, Groq, OpenAI, OpenRouter, self-hosted vLLM behind one interface |
 | Security | Secrets in GitHub Secrets, least-privilege tokens, prompt-injection handling |
 
 ## 12. Phases and gates
@@ -207,7 +228,7 @@ Each phase ends with a review by the owner before the next starts.
 | 1. Skeleton | Code graph on a scripted model in tests | Done 2026-10-15 (v1 agents) |
 | 1b. Re-shape | Version B with the v2 agents (quote scout, verifier, poster scout) on fakes; tests for every hard rule | — |
 | 2. Tools, MCP, memory | Tavily MCP, Wikiquote, poster APIs; quotes MCP server; pgvector library; Postgres checkpointer | Neon, Tavily, Unsplash/Pexels accounts |
-| 3. Real model | Groq gpt-oss-120b; first real shadow draft with poster as a review issue; cost measured; Langfuse traces | Groq key, Langfuse account |
+| 3. Real model | `grok-4.3` via the model config; first real shadow draft with poster as a review issue; cost measured; Langfuse traces | xAI API key, Langfuse account |
 | 4. The study | Versions A (workflow) and C (supervisor) next to B; eval harness (verifier precision, A/B/C comparison); Qdrant comparison | Qdrant account |
 | 5. Shadow fortnight and live | 6 drafts reviewed; `interrupt` + approve-to-publish; live Mon / Wed / Fri at 10 AM IST | Go-ahead to post |
 
@@ -221,7 +242,7 @@ Each phase ends with a review by the owner before the next starts.
 | Post text | Quote + short reflection + one takeaway + hashtags | Decided 2026-10-24 |
 | Time and days | 10 AM IST, Mon / Wed / Fri, then review | Decided 2026-10-15 |
 | Orchestration | Three versions: A workflow, B multi-agent hybrid (default), C supervisor, measured | Decided 2026-10-24 |
-| Model | Groq `gpt-oss-120b` first (as LBE); self-hosted on Modal later | Decided 2026-10-24 |
+| Model | Model-agnostic config; default all-Grok `grok-4.3`; no Claude in this pipeline | Decided 2026-10-24 |
 | MCP | Consume Tavily's server; provide our own quotes server; stdio | Decided 2026-10-24 |
 | Vector DB | pgvector main, Qdrant comparison | Decided 2026-10-15 |
-| Critic family | Different open-weight family | Open |
+| Critic model | Same as default (`grok-4.3`); switch only if lenient vs the owner's ratings | Decided 2026-10-24 |
